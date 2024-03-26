@@ -60,16 +60,11 @@ impl BoolTensor of TensorTrait<bool> {
         unravel_index(index, *self.shape)
     }
 
-    fn reshape(self: @Tensor<bool>, target_shape: Span<i32>, allowzero: bool) -> Tensor<bool> {
-        reshape(self, target_shape, allowzero)
+    fn reshape(self: @Tensor<bool>, target_shape: Span<usize>) -> Tensor<bool> {
+        reshape(self, target_shape)
     }
 
-    fn reduce_sum(
-        self: @Tensor<bool>,
-        axes: Option<Span<i32>>,
-        keepdims: Option<bool>,
-        noop_with_empty_axes: Option<bool>
-    ) -> Tensor<bool> {
+    fn reduce_sum(self: @Tensor<bool>, axis: usize, keepdims: bool) -> Tensor<bool> {
         panic(array!['not supported!'])
     }
 
@@ -78,8 +73,8 @@ impl BoolTensor of TensorTrait<bool> {
     }
 
     fn argmax(
-        self: @Tensor<bool>, axis: i32, keepdims: Option<bool>, select_last_index: Option<bool>
-    ) -> Tensor<i32> {
+        self: @Tensor<bool>, axis: usize, keepdims: Option<bool>, select_last_index: Option<bool>
+    ) -> Tensor<usize> {
         panic(array!['not supported!'])
     }
 
@@ -117,11 +112,11 @@ impl BoolTensor of TensorTrait<bool> {
         panic(array!['not supported!'])
     }
 
-    fn less(self: @Tensor<bool>, other: @Tensor<bool>) -> Tensor<i32> {
+    fn less(self: @Tensor<bool>, other: @Tensor<bool>) -> Tensor<usize> {
         panic(array!['not supported!'])
     }
 
-    fn less_equal(self: @Tensor<bool>, other: @Tensor<bool>) -> Tensor<i32> {
+    fn less_equal(self: @Tensor<bool>, other: @Tensor<bool>) -> Tensor<usize> {
         panic(array!['not supported!'])
     }
 
@@ -231,7 +226,7 @@ impl BoolTensor of TensorTrait<bool> {
         core_ops::slice::<bool>(self, starts, ends, axes, steps)
     }
 
-    fn gather(self: @Tensor<bool>, indices: Tensor<i32>, axis: Option<i32>) -> Tensor<bool> {
+    fn gather(self: @Tensor<bool>, indices: Tensor<usize>, axis: Option<usize>) -> Tensor<bool> {
         math::gather::gather(self, indices, axis)
     }
 
@@ -374,7 +369,7 @@ impl BoolTensor of TensorTrait<bool> {
     }
 
     fn gather_elements(
-        self: @Tensor<bool>, indices: Tensor<i32>, axis: Option<i32>
+        self: @Tensor<bool>, indices: Tensor<usize>, axis: Option<usize>
     ) -> Tensor<bool> {
         math::gather_elements::gather_elements(self, indices, axis)
     }
@@ -552,6 +547,10 @@ impl BoolTensor of TensorTrait<bool> {
     ) -> Tensor<bool> {
         panic(array!['not supported!'])
     }
+
+    fn tile(self: @Tensor<bool>, repeats: Span<usize>) -> Tensor<bool> {
+         panic(array!['not supported!'])
+    }
 }
 
 /// Implements partial equal for two `Tensor<bool>` using the `PartialEq` trait.
@@ -575,19 +574,17 @@ impl BoolTryIntobool of TryInto<bool, bool> {
 fn tensor_eq(mut lhs: Tensor<bool>, mut rhs: Tensor<bool>,) -> bool {
     let mut is_eq = true;
 
-    while lhs.shape.len() != 0
-        && is_eq {
-            is_eq = lhs.shape.pop_front().unwrap() == rhs.shape.pop_front().unwrap();
-        };
+    while lhs.shape.len() != 0 && is_eq {
+        is_eq = lhs.shape.pop_front().unwrap() == rhs.shape.pop_front().unwrap();
+    };
 
     if !is_eq {
         return false;
     }
 
-    while lhs.data.len() != 0
-        && is_eq {
-            is_eq = lhs.data.pop_front().unwrap() == rhs.data.pop_front().unwrap();
-        };
+    while lhs.data.len() != 0 && is_eq {
+        is_eq = lhs.data.pop_front().unwrap() == rhs.data.pop_front().unwrap();
+    };
 
     is_eq
 }

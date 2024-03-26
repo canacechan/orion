@@ -65,17 +65,12 @@ impl U32Tensor of TensorTrait<u32> {
         unravel_index(index, *self.shape)
     }
 
-    fn reshape(self: @Tensor<u32>, target_shape: Span<i32>, allowzero: bool) -> Tensor<u32> {
-        reshape(self, target_shape, allowzero)
+    fn reshape(self: @Tensor<u32>, target_shape: Span<usize>) -> Tensor<u32> {
+        reshape(self, target_shape)
     }
 
-    fn reduce_sum(
-        self: @Tensor<u32>,
-        axes: Option<Span<i32>>,
-        keepdims: Option<bool>,
-        noop_with_empty_axes: Option<bool>
-    ) -> Tensor<u32> {
-        math::reduce_sum::reduce_sum(self, axes, keepdims, noop_with_empty_axes)
+    fn reduce_sum(self: @Tensor<u32>, axis: usize, keepdims: bool) -> Tensor<u32> {
+        math::reduce_sum::reduce_sum(self, axis, keepdims)
     }
 
     fn reduce_prod(self: @Tensor<u32>, axis: usize, keepdims: bool) -> Tensor<u32> {
@@ -83,8 +78,8 @@ impl U32Tensor of TensorTrait<u32> {
     }
 
     fn argmax(
-        self: @Tensor<u32>, axis: i32, keepdims: Option<bool>, select_last_index: Option<bool>
-    ) -> Tensor<i32> {
+        self: @Tensor<u32>, axis: usize, keepdims: Option<bool>, select_last_index: Option<bool>
+    ) -> Tensor<usize> {
         math::argmax::argmax(self, axis, keepdims, select_last_index)
     }
 
@@ -122,11 +117,11 @@ impl U32Tensor of TensorTrait<u32> {
         math::greater_equal::greater_equal(self, other)
     }
 
-    fn less(self: @Tensor<u32>, other: @Tensor<u32>) -> Tensor<i32> {
+    fn less(self: @Tensor<u32>, other: @Tensor<u32>) -> Tensor<usize> {
         math::less::less(self, other)
     }
 
-    fn less_equal(self: @Tensor<u32>, other: @Tensor<u32>) -> Tensor<i32> {
+    fn less_equal(self: @Tensor<u32>, other: @Tensor<u32>) -> Tensor<usize> {
         math::less_equal::less_equal(self, other)
     }
 
@@ -292,7 +287,7 @@ impl U32Tensor of TensorTrait<u32> {
         core_tensor::slice::<u32>(self, starts, ends, axes, steps)
     }
 
-    fn gather(self: @Tensor<u32>, indices: Tensor<i32>, axis: Option<i32>) -> Tensor<u32> {
+    fn gather(self: @Tensor<u32>, indices: Tensor<usize>, axis: Option<usize>) -> Tensor<u32> {
         math::gather::gather(self, indices, axis)
     }
 
@@ -383,7 +378,7 @@ impl U32Tensor of TensorTrait<u32> {
     }
 
     fn gather_elements(
-        self: @Tensor<u32>, indices: Tensor<i32>, axis: Option<i32>
+        self: @Tensor<u32>, indices: Tensor<usize>, axis: Option<usize>
     ) -> Tensor<u32> {
         math::gather_elements::gather_elements(self, indices, axis)
     }
@@ -550,6 +545,10 @@ impl U32Tensor of TensorTrait<u32> {
         ml::label_encoder::label_encoder(
             self, default_list, default_tensor, keys, keys_tensor, values, values_tensor
         )
+    }
+
+    fn tile(self: @Tensor<u32>, repeats: Span<usize>) -> Tensor<u32> {
+        math::tile::tile(*self, repeats)
     }
 }
 

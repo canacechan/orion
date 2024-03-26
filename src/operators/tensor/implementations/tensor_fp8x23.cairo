@@ -68,17 +68,12 @@ impl FP8x23Tensor of TensorTrait<FP8x23> {
         unravel_index(index, *self.shape)
     }
 
-    fn reshape(self: @Tensor<FP8x23>, target_shape: Span<i32>, allowzero: bool) -> Tensor<FP8x23> {
-        reshape(self, target_shape, allowzero)
+    fn reshape(self: @Tensor<FP8x23>, target_shape: Span<usize>) -> Tensor<FP8x23> {
+        reshape(self, target_shape)
     }
 
-    fn reduce_sum(
-        self: @Tensor<FP8x23>,
-        axes: Option<Span<i32>>,
-        keepdims: Option<bool>,
-        noop_with_empty_axes: Option<bool>
-    ) -> Tensor<FP8x23> {
-        math::reduce_sum::reduce_sum(self, axes, keepdims, noop_with_empty_axes)
+    fn reduce_sum(self: @Tensor<FP8x23>, axis: usize, keepdims: bool) -> Tensor<FP8x23> {
+        math::reduce_sum::reduce_sum(self, axis, keepdims)
     }
 
     fn reduce_prod(self: @Tensor<FP8x23>, axis: usize, keepdims: bool) -> Tensor<FP8x23> {
@@ -86,8 +81,8 @@ impl FP8x23Tensor of TensorTrait<FP8x23> {
     }
 
     fn argmax(
-        self: @Tensor<FP8x23>, axis: i32, keepdims: Option<bool>, select_last_index: Option<bool>
-    ) -> Tensor<i32> {
+        self: @Tensor<FP8x23>, axis: usize, keepdims: Option<bool>, select_last_index: Option<bool>
+    ) -> Tensor<usize> {
         math::argmax::argmax(self, axis, keepdims, select_last_index)
     }
 
@@ -125,11 +120,11 @@ impl FP8x23Tensor of TensorTrait<FP8x23> {
         math::greater_equal::greater_equal(self, other)
     }
 
-    fn less(self: @Tensor<FP8x23>, other: @Tensor<FP8x23>) -> Tensor<i32> {
+    fn less(self: @Tensor<FP8x23>, other: @Tensor<FP8x23>) -> Tensor<usize> {
         math::less::less(self, other)
     }
 
-    fn less_equal(self: @Tensor<FP8x23>, other: @Tensor<FP8x23>) -> Tensor<i32> {
+    fn less_equal(self: @Tensor<FP8x23>, other: @Tensor<FP8x23>) -> Tensor<usize> {
         math::less_equal::less_equal(self, other)
     }
 
@@ -350,7 +345,9 @@ impl FP8x23Tensor of TensorTrait<FP8x23> {
         core_ops::slice::<FP8x23>(self, starts, ends, axes, steps)
     }
 
-    fn gather(self: @Tensor<FP8x23>, indices: Tensor<i32>, axis: Option<i32>) -> Tensor<FP8x23> {
+    fn gather(
+        self: @Tensor<FP8x23>, indices: Tensor<usize>, axis: Option<usize>
+    ) -> Tensor<FP8x23> {
         math::gather::gather(self, indices, axis)
     }
 
@@ -429,7 +426,7 @@ impl FP8x23Tensor of TensorTrait<FP8x23> {
     }
 
     fn gather_elements(
-        self: @Tensor<FP8x23>, indices: Tensor<i32>, axis: Option<i32>
+        self: @Tensor<FP8x23>, indices: Tensor<usize>, axis: Option<usize>
     ) -> Tensor<FP8x23> {
         math::gather_elements::gather_elements(self, indices, axis)
     }
@@ -636,6 +633,10 @@ impl FP8x23Tensor of TensorTrait<FP8x23> {
             self, default_list, default_tensor, keys, keys_tensor, values, values_tensor
         )
     }
+
+    fn tile(self: @Tensor<FP8x23>, repeats: Span<usize>) -> Tensor<FP8x23> {
+        math::tile::tile(*self, repeats)
+    }
 }
 
 /// Implements addition for `Tensor<FP8x23>` using the `Add` trait.
@@ -780,19 +781,17 @@ fn relative_eq(lhs: @FP8x23, rhs: @FP8x23) -> bool {
 fn tensor_eq(mut lhs: Tensor<FP8x23>, mut rhs: Tensor<FP8x23>,) -> bool {
     let mut is_eq = true;
 
-    while lhs.shape.len() != 0
-        && is_eq {
-            is_eq = lhs.shape.pop_front().unwrap() == rhs.shape.pop_front().unwrap();
-        };
+    while lhs.shape.len() != 0 && is_eq {
+        is_eq = lhs.shape.pop_front().unwrap() == rhs.shape.pop_front().unwrap();
+    };
 
     if !is_eq {
         return false;
     }
 
-    while lhs.data.len() != 0
-        && is_eq {
-            is_eq = relative_eq(lhs.data.pop_front().unwrap(), rhs.data.pop_front().unwrap());
-        };
+    while lhs.data.len() != 0 && is_eq {
+        is_eq = relative_eq(lhs.data.pop_front().unwrap(), rhs.data.pop_front().unwrap());
+    };
 
     is_eq
 }

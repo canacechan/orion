@@ -558,21 +558,15 @@ trait TensorTrait<T> {
     /// # tensor.reshape
     ///
     /// ```rust 
-    ///    fn reshape(self: @Tensor<T>, target_shape: Span<i32>, allowzero: bool) -> Tensor<T>;
+    ///    fn reshape(self: @Tensor<T>, target_shape: Span<usize>) -> Tensor<T>;
     /// ```
     ///
-    /// Reshape the input tensor similar to numpy.reshape. First input is the data tensor, second 
-    /// input is a shape tensor which specifies the output shape. It outputs the reshaped tensor. 
-    /// At most one dimension of the new shape can be -1. In this case, the value is inferred from 
-    /// the size of the tensor and the remaining dimensions. A dimension could also be 0, in which case 
-    /// the actual dimension value is unchanged (i.e. taken from the input tensor). If 'allowzero' is set,
-    /// and the new shape includes 0, the dimension will be set explicitly to zero (i.e. not taken from input tensor)
+    /// Returns a new tensor with the specified target shape and the same data as the input tensor.
     ///
     /// ## Args
     ///
     /// * `self`(`@Tensor<T>`) - The input tensor.
-    /// * `target_shape`(Span<i32>) - A span containing the target shape of the tensor.
-    /// * `allowzero`(`bool`) - Indicates that if any value in the 'shape' input is set to zero, the zero value is honored, similar to NumPy.
+    /// * `target_shape`(Span<usize>) - A span containing the target shape of the tensor.
     ///
     /// ## Panics
     ///
@@ -595,12 +589,12 @@ trait TensorTrait<T> {
     ///     );
     /// 
     ///     // We can call `reshape` function as follows.
-    ///     return tensor.reshape(target_shape: array![2, 4].span(), false);
+    ///     return tensor.reshape(target_shape: array![2, 4].span());
     /// }
     /// >>> [[0,1,2,3], [4,5,6,7]]
     /// ```
     ///
-    fn reshape(self: @Tensor<T>, target_shape: Span<i32>, allowzero: bool) -> Tensor<T>;
+    fn reshape(self: @Tensor<T>, target_shape: Span<usize>) -> Tensor<T>;
     /// # tensor.transpose
     ///
     /// ```rust 
@@ -644,7 +638,7 @@ trait TensorTrait<T> {
     /// ## tensor.reduce_sum
     ///
     /// ```rust 
-    ///    fn reduce_sum(self: @Tensor<T>, axes: Option<Span<i32>>, keepdims: Option<bool>, noop_with_empty_axes: Option<bool>) -> Tensor<T>;
+    ///    fn reduce_sum(self: @Tensor<T>, axis: usize, keepdims: bool) -> Tensor<T>;
     /// ```
     ///
     /// Reduces a tensor by summing its elements along a specified axis.
@@ -652,13 +646,16 @@ trait TensorTrait<T> {
     /// ## Args
     ///
     /// * `self`(`@Tensor<T>`) - The input tensor.
-    /// * `axes`(`Option<Span<i32>>`) - Optional input list of integers, along which to reduce. The default is to reduce over all the dimensions of the input tensor if 'noop_with_empty_axes' is false, else act as an Identity op when 'noop_with_empty_axes' is true.
-    /// * `keepdims`(`Option<bool>`) - Keep the reduced dimension or not, default 1 means keep reduced dimension.
-    /// * `noop_with_empty_axes`(`Option<bool>`) - Defines behavior if 'axes' is empty. Default behavior with 'false' is to reduce all axes. When axes is empty and this attribute is set to true, input tensor will not be reduced,and the output tensor would be equivalent to input tensor.
+    /// * `axis`(`usize`) - The dimension to reduce.
+    /// * `keepdims`(`bool`) - If true, retains reduced dimensions with length 1.
+    ///
+    /// ## Panics 
+    /// 
+    /// * Panics if axis is not in the range of the input tensor's dimensions.
     ///
     /// ## Returns
     ///
-    /// Reduced output tensor.
+    /// A new `Tensor<T>` instance with the specified axis reduced by summing its elements.
     ///
     /// ## Examples
     ///
@@ -673,21 +670,16 @@ trait TensorTrait<T> {
     ///     );
     /// 
     ///     // We can call `reduce_sum` function as follows.
-    ///     return tensor.reduce_sum(axes: Option::None, keepdims: false);
+    ///     return tensor.reduce_sum(axis: 0, keepdims: false);
     /// }
     /// >>> [[4,6],[8,10]]
     /// ```
     ///
-    fn reduce_sum(
-        self: @Tensor<T>,
-        axes: Option<Span<i32>>,
-        keepdims: Option<bool>,
-        noop_with_empty_axes: Option<bool>
-    ) -> Tensor<T>; 
+    fn reduce_sum(self: @Tensor<T>, axis: usize, keepdims: bool) -> Tensor<T>;
     /// # tensor.argmax
     ///
     /// ```rust 
-    ///    fn argmax(self: @Tensor<T>, axis: i32, keepdims: Option<bool>, select_last_index: Option<bool>) -> Tensor<i32>;
+    ///    fn argmax(self: @Tensor<T>, axis: usize, keepdims: Option<bool>, select_last_index: Option<bool>) -> Tensor<usize>;
     /// ```
     ///
     /// Returns the index of the maximum value along the specified axis.
@@ -695,7 +687,7 @@ trait TensorTrait<T> {
     /// ## Args
     ///
     /// * `self`(`@Tensor<T>`) - The input tensor.
-    /// * `axis`(`i32`) - The axis along which to compute the argmax.
+    /// * `axis`(`usize`) - The axis along which to compute the argmax.
     /// * `keepdims`(`Option<bool>`) - If true, retains reduced dimensions with length 1. Defaults to true.
     /// * `select_last_index`(`Option<bool>`) - If true, the index of the last occurrence of the maximum value is returned. Defaults to false.   
     ///
@@ -765,8 +757,8 @@ trait TensorTrait<T> {
     /// ```
     ///
     fn argmax(
-        self: @Tensor<T>, axis: i32, keepdims: Option<bool>, select_last_index: Option<bool>
-    ) -> Tensor<i32>;
+        self: @Tensor<T>, axis: usize, keepdims: Option<bool>, select_last_index: Option<bool>
+    ) -> Tensor<usize>;
     /// # tensor.argmin
     ///
     /// ```rust 
@@ -1252,7 +1244,7 @@ trait TensorTrait<T> {
     /// #tensor.less
     ///
     /// ```rust
-    ///     fn less(self: @Tensor<T>, other: @Tensor<T>) -> Tensor<i32>;
+    ///     fn less(self: @Tensor<T>, other: @Tensor<T>) -> Tensor<usize>;
     /// ```
     ///
     /// Check if each element of the first tensor is less than the corresponding element of the second tensor.
@@ -1271,7 +1263,7 @@ trait TensorTrait<T> {
     ///
     /// ## Returns
     ///
-    /// A new `Tensor<bool>` of booleans with the same shape as the broadcasted inputs.
+    /// A new `Tensor<usize>` of booleans (0 or 1) with the same shape as the broadcasted inputs.
     ///
     /// ## Examples
     ///
@@ -1282,7 +1274,7 @@ trait TensorTrait<T> {
     /// 
     /// use orion::operators::tensor::{TensorTrait, Tensor, U32Tensor};
     /// 
-    /// fn less_example() -> Tensor<i32> {
+    /// fn less_example() -> Tensor<usize> {
     ///     let tensor_1 = TensorTrait::<u32>::new(
     ///         shape: array![3, 3, 3].span(), data: array![0, 1, 2, 3, 4, 5, 6, 7, 8].span(),
     ///     );
@@ -1304,7 +1296,7 @@ trait TensorTrait<T> {
     /// 
     /// use orion::operators::tensor::{TensorTrait, Tensor, U32Tensor};
     /// 
-    /// fn less_example() -> Tensor<i32> {
+    /// fn less_example() -> Tensor<usize> {
     ///     let tensor_1 = TensorTrait::<u32>::new(
     ///         shape: array![3, 3, 3].span(), data: array![0, 1, 2, 3, 4, 5, 6, 7, 8].span(),
     ///     );
@@ -1317,11 +1309,11 @@ trait TensorTrait<T> {
     /// >>> [0,0,0,0,0,0,0,1,1]
     /// ```
     ///
-    fn less(self: @Tensor<T>, other: @Tensor<T>) -> Tensor<i32>;
+    fn less(self: @Tensor<T>, other: @Tensor<T>) -> Tensor<usize>;
     /// #tensor.less_equal
     ///
     /// ```rust
-    ///     fn less_equal(self: @Tensor<T>, other: @Tensor<T>) -> Tensor<i32>;
+    ///     fn less_equal(self: @Tensor<T>, other: @Tensor<T>) -> Tensor<usize>;
     /// ```
     ///
     /// Check if each element of the first tensor is less than or equal to the corresponding element of the second tensor.
@@ -1340,7 +1332,7 @@ trait TensorTrait<T> {
     ///
     /// ## Returns
     ///
-    /// A new `Tensor<i32>` of booleans (0 or 1) with the same shape as the broadcasted inputs.
+    /// A new `Tensor<usize>` of booleans (0 or 1) with the same shape as the broadcasted inputs.
     ///
     /// ## Examples
     ///
@@ -1351,7 +1343,7 @@ trait TensorTrait<T> {
     /// 
     /// use orion::operators::tensor::{TensorTrait, Tensor, U32Tensor};
     /// 
-    /// fn less_equal_example() -> Tensor<i32> {
+    /// fn less_equal_example() -> Tensor<usize> {
     ///     let tensor_1 = TensorTrait::<u32>::new(
     ///         shape: array![3, 3, 3].span(), data: array![0, 1, 2, 3, 4, 5, 6, 7, 8].span(),
     ///     );
@@ -1373,7 +1365,7 @@ trait TensorTrait<T> {
     /// 
     /// use orion::operators::tensor::{TensorTrait, Tensor, U32Tensor};
     /// 
-    /// fn less_equal_example() -> Tensor<i32> {
+    /// fn less_equal_example() -> Tensor<usize> {
     ///     let tensor_1 = TensorTrait::<u32>::new(
     ///         shape: array![3, 3, 3].span(), data: array![0, 1, 2, 3, 4, 5, 6, 7, 8].span(),
     ///     );
@@ -1386,7 +1378,7 @@ trait TensorTrait<T> {
     /// >>> [1,1,1,0,0,0,1,1,1]
     /// ```
     ///
-    fn less_equal(self: @Tensor<T>, other: @Tensor<T>) -> Tensor<i32>;
+    fn less_equal(self: @Tensor<T>, other: @Tensor<T>) -> Tensor<usize>;
     /// #tensor.abs
     ///
     /// ```rust
@@ -3174,7 +3166,7 @@ trait TensorTrait<T> {
     /// # tensor.gather
     ///
     /// ```rust 
-    ///    fn gather(self: @Tensor<T>, indices: Tensor<i32>, axis: Option<i32>) -> Tensor<T>;
+    ///    fn gather(self: @Tensor<T>, indices: Tensor<T>, axis: Option<usize>) -> Tensor<T>;
     /// ```
     ///
     /// Gather entries of the axis dimension of data.
@@ -3182,8 +3174,8 @@ trait TensorTrait<T> {
     /// ## Args
     ///
     /// * `self`(`@Tensor<T>`) - The input tensor.
-    /// * `indices`(`Tensor<i32>`) - Tensor of indices.
-    /// * `axis`(`Option<i32>`) - Axis to gather on. Default: axis=0.
+    /// * `indices`(`Tensor<T>`) - Tensor of indices.
+    /// * `axis`(`Option<usize>`) - Axis to gather on. Default: axis=0.
     ///
     /// ## Panics
     ///
@@ -3205,7 +3197,7 @@ trait TensorTrait<T> {
     ///         shape: array![2, 3].span(), 
     ///         data: array![[ 1, 2, 3],[4, 5, 6]].span(), 
     ///     );
-    ///     let indices = TensorTrait::<i32>::new(
+    ///     let indices = TensorTrait::<u32>::new(
     ///         shape: array![1, 1].span(), 
     ///         data: array![1, 0].span(), 
     ///     );
@@ -3219,7 +3211,7 @@ trait TensorTrait<T> {
     ///      [1. 2. 3.]]
     /// ```
     ///
-    fn gather(self: @Tensor<T>, indices: Tensor<i32>, axis: Option<i32>) -> Tensor<T>;
+    fn gather(self: @Tensor<T>, indices: Tensor<usize>, axis: Option<usize>) -> Tensor<T>;
     /// # tensor.unsqueeze
     ///
     /// ```rust 
@@ -4232,7 +4224,7 @@ trait TensorTrait<T> {
     /// # tensor.gather_elements
     ///
     /// ```rust 
-    ///    fn gather_elements(self: @Tensor<T>, indices: Tensor<i32>, axis: Option<i32>) -> Tensor<T>;
+    ///    fn gather_elements(self: @Tensor<T>, indices: Tensor<T>, axis: Option<usize>) -> Tensor<T>;
     /// ```
     ///
     /// GatherElements is an indexing operation that produces its output by indexing into the input data tensor at index positions determined by elements of the indices tensor.
@@ -4240,8 +4232,8 @@ trait TensorTrait<T> {
     /// ## Args
     ///
     /// * `self`(`@Tensor<T>`) - The input tensor.
-    /// * `indices`(`Tensor<i32>`) - Tensor of indices.
-    /// * `axis`(`Option<i32>`) - Axis to gather_elements on. Default: axis=0.
+    /// * `indices`(`Tensor<T>`) - Tensor of indices.
+    /// * `axis`(`Option<usize>`) - Axis to gather_elements on. Default: axis=0.
     ///
     /// ## Panics
     ///
@@ -4263,7 +4255,7 @@ trait TensorTrait<T> {
     ///         shape: array![3, 3].span(), 
     ///         data: array![[ 1, 2, 3],[4, 5, 6], [7, 8, 9]].span(), 
     ///     );
-    ///     let indices = TensorTrait::<i32>::new(
+    ///     let indices = TensorTrait::<u32>::new(
     ///         shape: array![1, 2, 0].span(), 
     ///         data: array![2, 0, 0].span(), 
     ///     );
@@ -4277,7 +4269,7 @@ trait TensorTrait<T> {
     ///      [7. 2. 3.]]
     /// ```
     ///
-    fn gather_elements(self: @Tensor<T>, indices: Tensor<i32>, axis: Option<i32>) -> Tensor<T>;
+    fn gather_elements(self: @Tensor<T>, indices: Tensor<usize>, axis: Option<usize>) -> Tensor<T>;
     /// # tensor.binarizer
     /// 
     /// ```rust
@@ -5858,6 +5850,51 @@ trait TensorTrait<T> {
         values: Option<Span<T>>,
         values_tensor: Option<Tensor<T>>
     ) -> Tensor<T>;
+    /// # TensorTrait::tile
+    ///
+    /// ```rust
+    ///         fn tile(self: @Tensor<T>, repeats: Span<usize>) -> Tensor<T>;
+    /// ```
+    ///
+    /// Constructs a tensor by tiling a given tensor. This is the same as function tile in Numpy, but no broadcast.
+    ///
+    ///  For example A = [[1, 2], [3, 4]], B = [1, 2], tile(A, B) = [[1, 2, 1, 2], [3, 4, 3, 4]]
+    ///
+    /// ## Args
+    ///
+    /// * `tensor`(`@Tensor<T>`) - Input tensor of any shape.
+    /// * `repeats`(Span<usize>) - 1D usize array of the same length as input's dimension number, includes numbers of repeated copies along input's dimensions.
+    ///
+    /// ## Returns
+    ///
+    /// * Output tensor of the same dimensions and type as tensor input. output_dim[i] = input_dim[i] * repeats[i].
+    ///
+    /// ## Examples
+    ///
+    /// ```rust
+    /// use orion::operators::tensor::{I32Tensor, I32TensorAdd};
+    /// use core::array::{ArrayTrait, SpanTrait};
+    /// use orion::operators::tensor::{TensorTrait, Tensor};
+    /// use orion::utils::{assert_eq, assert_seq_eq};
+    /// use orion::operators::tensor::I32TensorPartialEq;
+    /// 
+    /// 
+    /// fn example() -> Tensor<i32> {
+    ///     let mut shape = ArrayTrait::<usize>::new();
+    ///     shape.append(1);
+    ///     shape.append(2);
+    /// 
+    ///     let mut data = ArrayTrait::new();
+    ///     data.append(2);
+    ///     data.append(1);
+    ///     let input_0 = TensorTrait::new(shape.span(), data.span());
+    /// 
+    ///     return input_0.tile(array![1, 4].span());
+    /// }
+    /// >>> [[2, 1, 2, 1, 2, 1, 2, 1]]
+    /// ```
+    ///
+    fn tile(self: @Tensor<T>, repeats: Span<usize>) -> Tensor<T>;
 }
 
 /// Cf: TensorTrait::new docstring
@@ -5953,83 +5990,8 @@ fn stride(mut shape: Span<usize>) -> Span<usize> {
 
 
 /// Cf: TensorTrait::reshape docstring
-fn reshape<T, +Copy<Tensor<T>>>(
-    self: @Tensor<T>, target_shape: Span<i32>, allowzero: bool
-) -> Tensor<T> {
-    // Calculate the total number of elements in the original tensor
-    let mut total_elements = 1;
-    let mut shape = *self.shape;
-    loop {
-        match shape.pop_front() {
-            Option::Some(val) => total_elements *= *val,
-            Option::None => { break; }
-        };
-    };
-
-    // Calculate 'elements_so_far' and find 'inferred_index'
-    let mut elements_so_far = 1;
-    let mut inferred_index = Option::None;
-    let mut target_shape_clone = target_shape.clone();
-    let mut i: usize = 0;
-    loop {
-        match target_shape_clone.pop_front() {
-            Option::Some(dim) => {
-                if *dim == -1 {
-                    if inferred_index.is_none() {
-                        inferred_index = Option::Some(i);
-                    } else {
-                        panic!("Only one dimension can be inferred");
-                    }
-                } else if *dim == 0 && allowzero == false {
-                    // When allowzero is not set, copy the dimension size from the original tensor
-                    if i >= (*self.shape).len() {
-                        panic!("Dimension out of bounds for using original dimension value");
-                    }
-                    elements_so_far *= *(*self).shape.at(i);
-                } else if *dim >= 0 {
-                    elements_so_far *= (*dim).try_into().unwrap();
-                } else {
-                    panic!("Invalid dimension size");
-                };
-            },
-            Option::None => { break; }
-        };
-        i += 1;
-    };
-
-    let mut target_shape_clone = target_shape.clone();
-    let mut inferred_shape = ArrayTrait::<u32>::new();
-    i = 0; // Reset the index for the next loop
-    loop {
-        match target_shape_clone.pop_front() {
-            Option::Some(dim) => {
-                if *dim == -1 {
-                    inferred_shape.append(total_elements / elements_so_far) // Inferred dimension
-                } else if *dim == 0 {
-                    if allowzero == true {
-                        inferred_shape
-                            .append(
-                                0
-                            ) // Explicitly set the dimension to zero when allowzero is enabled
-                    } else if i < (*self.shape).len() {
-                        inferred_shape
-                            .append(
-                                *(*self).shape.at(i)
-                            ) // Dimension unchanged from original when allowzero is not enabled
-                    } else {
-                        panic!("Dimension out of bounds for using original dimension value");
-                    }
-                } else {
-                    inferred_shape
-                        .append((*dim).try_into().unwrap()) // Directly specified dimension
-                };
-            },
-            Option::None => { break; }
-        }
-        i += 1;
-    };
-
-    new_tensor(inferred_shape.span(), *self.data)
+fn reshape<T>(self: @Tensor<T>, target_shape: Span<usize>) -> Tensor<T> {
+    new_tensor(target_shape, *self.data)
 }
 
 /// Cf: TensorTrait::at docstring
